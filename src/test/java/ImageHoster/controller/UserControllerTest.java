@@ -1,4 +1,4 @@
-/*
+
 package ImageHoster.controller;
 
 import ImageHoster.model.User;
@@ -52,13 +52,13 @@ public class UserControllerTest {
         User user = new User();
         UserProfile userProfile = new UserProfile();
         userProfile.setId(1);
-        userProfile.setEmailAddress("a@gmail.com");
-        userProfile.setFullName("Abhi Mahajan");
-        userProfile.setMobileNumber("9876543210");
+        userProfile.setEmailAddress("s@gmail.com");
+        userProfile.setFullName("Srividhya");
+        userProfile.setMobileNumber("111111111");
         user.setProfile(userProfile);
         user.setId(1);
-        user.setUsername("Abhi");
-        user.setPassword("password");
+        user.setUsername("Srividhya");
+        user.setPassword("sss");
 
 
         this.mockMvc.perform(post("/users/registration")
@@ -73,13 +73,13 @@ public class UserControllerTest {
         User user = new User();
         UserProfile userProfile = new UserProfile();
         userProfile.setId(1);
-        userProfile.setEmailAddress("a@gmail.com");
-        userProfile.setFullName("Abhi Mahajan");
-        userProfile.setMobileNumber("9876543210");
+        userProfile.setEmailAddress("s@gmail.com");
+        userProfile.setFullName("Srividhya");
+        userProfile.setMobileNumber("1111111111");
         user.setProfile(userProfile);
         user.setId(1);
-        user.setUsername("Abhi");
-        user.setPassword("password1@");
+        user.setUsername("Srividhya");
+        user.setPassword("s6^");
 
 
         this.mockMvc.perform(post("/users/registration")
@@ -102,8 +102,8 @@ public class UserControllerTest {
     @Test
     public void signinWithWrongCredentials() throws Exception {
         User userSignin = new User();
-        userSignin.setUsername("Abhi");
-        userSignin.setPassword("password1@");
+        userSignin.setUsername("vidhya");
+        userSignin.setPassword("s@6");
 
         Mockito.when(userService.login(Mockito.anyObject())).thenReturn(null);
         session = new MockHttpSession();
@@ -122,17 +122,17 @@ public class UserControllerTest {
         User user = new User();
         UserProfile userProfile = new UserProfile();
         userProfile.setId(1);
-        userProfile.setEmailAddress("a@gmail.com");
-        userProfile.setFullName("Abhi Mahajan");
-        userProfile.setMobileNumber("9876543210");
+        userProfile.setEmailAddress("s@gmail.com");
+        userProfile.setFullName("Srividhya");
+        userProfile.setMobileNumber("1111111111");
         user.setProfile(userProfile);
         user.setId(1);
-        user.setUsername("Abhi");
-        user.setPassword("password");
+        user.setUsername("Srividhya");
+        user.setPassword("s6^");
 
         User userSignin = new User();
-        userSignin.setUsername("Abhi");
-        userSignin.setPassword("password1@");
+        userSignin.setUsername("Srividhya");
+        userSignin.setPassword("s6^");
 
         Mockito.when(userService.login(Mockito.anyObject())).thenReturn(user);
         session = new MockHttpSession();
@@ -151,13 +151,13 @@ public class UserControllerTest {
         User user = new User();
         UserProfile userProfile = new UserProfile();
         userProfile.setId(1);
-        userProfile.setEmailAddress("a@gmail.com");
-        userProfile.setFullName("Abhi Mahajan");
-        userProfile.setMobileNumber("9876543210");
+        userProfile.setEmailAddress("s@gmail.com");
+        userProfile.setFullName("Srividhya");
+        userProfile.setMobileNumber("1111111111");
         user.setProfile(userProfile);
         user.setId(1);
-        user.setUsername("Abhi");
-        user.setPassword("password");
+        user.setUsername("Srividhya");
+        user.setPassword("s6^");
 
         session = new MockHttpSession();
         session.setAttribute("loggeduser", user);
@@ -167,4 +167,4 @@ public class UserControllerTest {
                 .andExpect(content().string(containsString("Image Hoster")));
     }
 }
-*/
+
