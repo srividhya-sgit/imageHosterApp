@@ -2,7 +2,8 @@ package ImageHoster.model;
 
 import javax.persistence.*;
 import java.time.LocalDate;
-
+@Entity
+@Table(name = "Comment")
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

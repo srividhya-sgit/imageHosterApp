@@ -1,8 +1,10 @@
 package ImageHoster.controller;
 
+import ImageHoster.model.Comment;
 import ImageHoster.model.Image;
 import ImageHoster.model.Tag;
 import ImageHoster.model.User;
+import ImageHoster.service.CommentService;
 import ImageHoster.service.ImageService;
 import ImageHoster.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,10 @@ public class ImageController {
     @Autowired
     private TagService tagService;
 
+    @Autowired
+    private CommentService commentservice;
+
+
     //This method displays all the images in the user home page after successful login
     @RequestMapping("images")
     public String getUserImages(Model model) {
@@ -38,8 +44,9 @@ public class ImageController {
     //This method is called when the details of the specific image with corresponding title are to be displayed
     //The logic is to get the image from the databse with corresponding title. After getting the image from the database the details are shown
     //First receive the dynamic parameter in the incoming request URL in a string variable 'title' and also the Model type object
-    //Call the getImageByTitle() method in the business logic to fetch all the details of that image
-    //Add the image in the Model type object with 'image' as the key
+    //getImage() method in the business logic is to fetch all the details of that image
+    // image is added in the Model type object with 'image' as the key
+    //All the comments are fethched using  getComments and added in the model object
     //Return 'images/image.html' file
 
     //Also now you need to add the tags of an image in the Model type object
@@ -48,8 +55,8 @@ public class ImageController {
     @RequestMapping("/images/{imageId}/{title}")
     public String showImage(@PathVariable("title") String title, Model model, @PathVariable("imageId") Integer imageId) {
         Image image = imageService.getImage(imageId);
-        Image imagetitle = imageService.getImageByTitle("title");
-        model.addAttribute("title",title);
+        List<Comment> commentList = commentservice.getComments(image.getId(), image.getTitle());
+        model.addAttribute("comments", commentList);
         model.addAttribute("image", image);
         model.addAttribute("tags", image.getTags());
         return "images/image";
@@ -65,21 +72,18 @@ public class ImageController {
     //This controller method is called when the request pattern is of type 'images/upload' and also the incoming request is of POST type
     //The method receives all the details of the image to be stored in the database, and now the image will be sent to the business logic to be persisted in the database
     //After you get the imageFile, set the user of the image by getting the logged in user from the Http Session
-    //Convert the image to Base64 format and store it as a string in the 'imageFile' attribute
+    //Converts the image to Base64 format and store it as a string in the 'imageFile' attribute
     //Set the date on which the image is posted
     //After storing the image, this method directs to the logged in user homepage displaying all the images
-
     //Get the 'tags' request parameter using @RequestParam annotation which is just a string of all the tags
     //Store all the tags in the database and make a list of all the tags using the findOrCreateTags() method
     //set the tags attribute of the image as a list of all the tags returned by the findOrCreateTags() method
     @RequestMapping(value = "/images/upload", method = RequestMethod.POST)
     public String createImage(@RequestParam("file") MultipartFile file, @RequestParam("tags") String tags, Image newImage, HttpSession session) throws IOException {
-
         User user = (User) session.getAttribute("loggeduser");
         newImage.setUser(user);
         String uploadedImageData = convertUploadedFileToBase64(file);
         newImage.setImageFile(uploadedImageData);
-
         List<Tag> imageTags = findOrCreateTags(tags);
         newImage.setTags(imageTags);
         newImage.setDate(new Date());
@@ -98,11 +102,11 @@ public class ImageController {
         Image image = imageService.getImage(imageId);
         String tags = convertTagsToString(image.getTags());
         List<Tag> tag = findOrCreateTags(tags);
-       // List<Comment> commentList = commentservice.getComments(image.getId(), image.getTitle());
-     //   model.addAttribute("comments", commentList);
+        List<Comment> commentList = commentservice.getComments(image.getId(), image.getTitle());
+        model.addAttribute("comments", commentList);
         model.addAttribute("image", image);
         String error = "Only the owner of the image can edit the image";
-       Boolean ValidateUser = userValidation(image.getUser(), session);
+        Boolean ValidateUser = userValidation(image.getUser(), session);
         if (!ValidateUser) {
             model.addAttribute("editError", error);
             model.addAttribute("tags", tag);
@@ -115,9 +119,10 @@ public class ImageController {
     }
 
     private Boolean userValidation(User user, HttpSession session) {
-        User currentUser = (User) session.getAttribute("loggeduser");
 
-        if (user.getId() == currentUser.getId()) {
+        User sessionUser = (User) session.getAttribute("loggeduser");
+
+        if (user.getId() == sessionUser.getId()) {
             return true;
         } else
             return false;
@@ -127,17 +132,10 @@ public class ImageController {
     //This controller method is called when the request pattern is of type 'images/edit' and also the incoming request is of PUT type
     //The method receives the imageFile, imageId, updated image, along with the Http Session
     //The method adds the new imageFile to the updated image if user updates the imageFile and adds the previous imageFile to the new updated image if user does not choose to update the imageFile
-    //Set an id of the new updated image
-    //Set the user using Http Session
-    //Set the date on which the image is posted
-    //Call the updateImage() method in the business logic to update the image
-    //Direct to the same page showing the details of that particular updated image
-
     //The method also receives tags parameter which is a string of all the tags separated by a comma using the annotation @RequestParam
     //The method converts the string to a list of all the tags using findOrCreateTags() method and sets the tags attribute of an image as a list of all the tags
     @RequestMapping(value = "/editImage", method = RequestMethod.PUT)
     public String editImageSubmit(@RequestParam("file") MultipartFile file, @RequestParam("imageId") Integer imageId, @RequestParam("tags") String tags, Image updatedImage, HttpSession session, Model model) throws IOException {
-
         Image image = imageService.getImage(imageId);
         String updatedImageData = convertUploadedFileToBase64(file);
         List<Tag> imageTags = findOrCreateTags(tags);
@@ -153,11 +151,8 @@ public class ImageController {
         updatedImage.setUser(user);
         updatedImage.setTags(imageTags);
         updatedImage.setDate(new Date());
-
-
         imageService.updateImage(updatedImage);
-        model.addAttribute("images",updatedImage);
-
+        model.addAttribute("images", updatedImage);
         return "redirect:/images/" + updatedImage.getId() + "/" + updatedImage.getTitle();
     }
 
@@ -171,8 +166,8 @@ public class ImageController {
         Image image = imageService.getImage(imageId);
         String tags = convertTagsToString(image.getTags());
         List<Tag> tag = findOrCreateTags(tags);
-        //List<Comment> commentList = commentservice.getComments(image.getId(), image.getTitle());
-        //model.addAttribute("comments", commentList);
+        List<Comment> commentList = commentservice.getComments(image.getId(), image.getTitle());
+        model.addAttribute("comments", commentList);
         model.addAttribute("image", image);
         model.addAttribute("tags", tag);
         Boolean validUser = userValidation(image.getUser(), session);
@@ -216,7 +211,12 @@ public class ImageController {
     //The method receives the list of all tags
     //Converts the list of all tags to a single string containing all the tags separated by a comma
     //Returns the string
+
     private String convertTagsToString(List<Tag> tags) {
+
+        if (tags == null || tags.isEmpty()) {
+            return "";
+        }
         StringBuilder tagString = new StringBuilder();
 
         for (int i = 0; i <= tags.size() - 2; i++) {
@@ -225,7 +225,6 @@ public class ImageController {
 
         Tag lastTag = tags.get(tags.size() - 1);
         tagString.append(lastTag.getName());
-
         return tagString.toString();
     }
 }
